@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Segó Movies</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    background:#080808;
+    color:#fff;
+    font-family:Arial,sans-serif;
+}
+
+header{
+    background:#111;
+    padding:18px 15px;
+    text-align:center;
+    position:sticky;
+    top:0;
+    z-index:10;
+    border-bottom:1px solid #252525;
+}
+
+.logo{
+    font-size:29px;
+    font-weight:bold;
+}
+
+.logo span{
+    color:#e50914;
+}
+
+.subtitulo{
+    color:#888;
+    margin-top:5px;
+    font-size:13px;
+}
+
+.search{
+    width:100%;
+    max-width:500px;
+    margin:16px auto 0;
+    display:block;
+    padding:13px 15px;
+    border:0;
+    outline:none;
+    border-radius:8px;
+    background:#222;
+    color:white;
+    font-size:16px;
+}
+
+.container{
+    width:94%;
+    max-width:1200px;
+    margin:25px auto;
+}
+
+.titulo-seccion{
+    font-size:22px;
+    margin-bottom:18px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(155px,1fr));
+    gap:16px;
+}
+
+.movie{
+    background:#121212;
+    border-radius:10px;
+    overflow:hidden;
+    transition:.2s;
+}
+
+.movie:hover{
+    transform:translateY(-4px);
+}
+
+.poster{
+    width:100%;
+    aspect-ratio:2/3;
+    object-fit:cover;
+    display:block;
+    background:#222;
+}
+
+.info{
+    padding:11px;
+}
+
+.nombre{
+    font-size:15px;
+    font-weight:bold;
+    min-height:38px;
+    display:flex;
+    align-items:center;
+}
+
+.ver{
+    width:100%;
+    margin-top:10px;
+    padding:10px;
+    border:0;
+    border-radius:6px;
+    background:#e50914;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.ver:hover{
+    background:#b20710;
+}
+
+.vacio{
+    text-align:center;
+    color:#777;
+    padding:50px 10px;
+}
+
+.modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.96);
+    z-index:100;
+    padding:15px;
+    overflow:auto;
+}
+
+.modal-contenido{
+    width:100%;
+    max-width:1000px;
+    margin:auto;
+    padding-top:40px;
+}
+
+.cerrar{
+    position:fixed;
+    top:12px;
+    right:12px;
+    border:0;
+    background:#222;
+    color:white;
+    padding:10px 15px;
+    border-radius:7px;
+    font-size:15px;
+    cursor:pointer;
+}
+
+.player{
+    width:100%;
+    max-height:80vh;
+    background:#000;
+    display:block;
+}
+
+.nombre-video{
+    font-size:20px;
+    font-weight:bold;
+    margin-top:15px;
+}
+
+footer{
+    text-align:center;
+    color:#555;
+    padding:40px 10px;
+    font-size:13px;
+}
+
+@media(max-width:500px){
+
+    .grid{
+        grid-template-columns:repeat(2,1fr);
+        gap:12px;
+    }
+
+    .logo{
+        font-size:25px;
+    }
+
+    .container{
+        width:92%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+    <div class="logo">
+        SEGÓ <span>MOVIES</span>
+    </div>
+
+    <div class="subtitulo">
+        Tu catálogo de películas
+    </div>
+
+    <input
+        id="buscador"
+        class="search"
+        type="text"
+        placeholder="🔎 Buscar película..."
+        autocomplete="off"
+    >
+
+</header>
+
+
+<main class="container">
+
+    <h2 class="titulo-seccion">
+        🎬 Películas
+    </h2>
+
+    <div id="peliculas" class="grid"></div>
+
+</main>
+
+
+<footer>
+    SEGÓ MOVIES
+</footer>
+
+
+<!-- REPRODUCTOR -->
+
+<div id="modal" class="modal">
+
+    <button
+        class="cerrar"
+        onclick="cerrarPelicula()">
+        ✕ Cerrar
+    </button>
+
+    <div class="modal-contenido">
+
+        <video
+            id="video"
+            class="player"
+            controls
+            playsinline>
+        </video>
+
+        <div
+            id="nombreVideo"
+            class="nombre-video">
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/*
+==========================================================
+SEGÓ MOVIES
+LISTA DE PELÍCULAS
+==========================================================
+
+Para agregar una película:
+
+1. Sube la portada a:
+
+portadas/
+
+2. Sube el video a:
+
+peliculas/
+
+3. Agrega una película aquí:
+
+{
+    titulo: "Nombre",
+    portada: "portadas/nombre.jpg",
+    video: "peliculas/nombre.mp4"
+}
+
+==========================================================
+*/
+
+
+const peliculas = [
+
+    /*
+    ======================================================
+    AGREGA TUS PELÍCULAS AQUÍ
+    ======================================================
+
+    EJEMPLO DE ESTRUCTURA:
+
+    {
+        titulo: "Nombre de tu película",
+        portada: "portadas/portada.jpg",
+        video: "peliculas/pelicula.mp4"
+    }
+
+    NO necesitas poner películas de ejemplo.
+    ======================================================
+    */
+
+];
+
+
+
+/*
+==========================================================
+MOSTRAR PELÍCULAS
+==========================================================
+*/
+
+function mostrarPeliculas(lista){
+
+    const contenedor =
+        document.getElementById("peliculas");
+
+    contenedor.innerHTML = "";
+
+
+    if(lista.length === 0){
+
+        contenedor.innerHTML = `
+            <div class="vacio">
+                No hay películas agregadas.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    lista.forEach((pelicula,index)=>{
+
+        const tarjeta =
+            document.createElement("div");
+
+        tarjeta.className = "movie";
+
+
+        tarjeta.innerHTML = `
+
+            <img
+                class="poster"
+                src="${escapar(pelicula.portada)}"
+                alt="${escapar(pelicula.titulo)}"
+                loading="lazy"
+                onerror="this.style.display='none'"
+            >
+
+            <div class="info">
+
+                <div class="nombre">
+                    ${escapar(pelicula.titulo)}
+                </div>
+
+                <button
+                    class="ver"
+                    onclick="verPelicula(${index})">
+                    ▶ VER
+                </button>
+
+            </div>
+
+        `;
+
+
+        contenedor.appendChild(tarjeta);
+
+    });
+
+}
+
+
+
+/*
+==========================================================
+BUSCADOR
+==========================================================
+*/
+
+document
+.getElementById("buscador")
+.addEventListener("input",function(){
+
+    const texto =
+        this.value
+        .toLowerCase()
+        .trim();
+
+
+    const resultados =
+        peliculas.filter(pelicula =>
+            pelicula.titulo
+            .toLowerCase()
+            .includes(texto)
+        );
+
+
+    mostrarPeliculas(resultados);
+
+});
+
+
+
+/*
+==========================================================
+ABRIR PELÍCULA
+==========================================================
+*/
+
+function verPelicula(index){
+
+    const pelicula =
+        peliculas[index];
+
+
+    if(!pelicula){
+        return;
+    }
+
+
+    const modal =
+        document.getElementById("modal");
+
+    const video =
+        document.getElementById("video");
+
+    const nombre =
+        document.getElementById("nombreVideo");
+
+
+    video.src =
+        pelicula.video;
+
+    nombre.textContent =
+        pelicula.titulo;
+
+
+    modal.style.display =
+        "block";
+
+
+    document.body.style.overflow =
+        "hidden";
+
+
+    video.play().catch(()=>{});
+
+}
+
+
+
+/*
+==========================================================
+CERRAR PELÍCULA
+==========================================================
+*/
+
+function cerrarPelicula(){
+
+    const modal =
+        document.getElementById("modal");
+
+    const video =
+        document.getElementById("video");
+
+
+    video.pause();
+
+    video.removeAttribute("src");
+
+    video.load();
+
+
+    modal.style.display =
+        "none";
+
+
+    document.body.style.overflow =
+        "";
+}
+
+
+
+/*
+==========================================================
+ESCAPAR TEXTO
+==========================================================
+*/
+
+function escapar(texto){
+
+    return String(texto)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+}
+
+
+
+/*
+==========================================================
+INICIAR
+==========================================================
+*/
+
+mostrarPeliculas(peliculas);
+
+</script>
+
+</body>
+</html>
